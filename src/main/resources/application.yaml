@@ -4,19 +4,50 @@ server:
 spring:
   application:
     name: ORDER-SERVICE
+
   config:
-    import: "optional:configserver:http://localhost:9296"  # ✅ added optional: prefix
+    import: "optional:configserver:http://localhost:9296"
+
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:3306/orderdb
     username: root
     password: Root@123
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
+
+# ✅ resilience4j is TOP LEVEL — not under spring
+resilience4j:
+  circuitbreaker:
+    instances:
+      external:
+        event-consumer-buffer-size: 10
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-size: 10
+        sliding-window-type: COUNT_BASED
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    registry-fetch-interval-seconds: 5
 
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+  health:
+    circuitbreakers:
+      enabled: true
